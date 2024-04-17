@@ -26,16 +26,17 @@ RUN --mount=${mountArgs} \
     await run('docker', ['buildx', 'build', '-f', path.join(scratchDir, 'Dancefile.extract'), '--tag', 'dance:extract', '--load', scratchDir]);
 
     // Create Extraction Image
+    const containerName = 'cache-container-' + Math.random().toString(10).substring(2,8);
     try {
-        await run('docker', ['rm', '-f', 'cache-container']);
+        await run('docker', ['rm', '-f', containerName]);
     } catch (error) {
         // Ignore error if container does not exist
     }
-    await run('docker', ['create', '-ti', '--name', 'cache-container', 'dance:extract']);
+    await run('docker', ['create', '-ti', '--name', containerName, 'dance:extract']);
 
     // Unpack Docker Image into Scratch
     await runPiped(
-        ['docker', ['cp', '-L', 'cache-container:/var/dance-cache', '-']],
+        ['docker', ['cp', '-L', containerName + ':/var/dance-cache', '-']],
         ['tar', ['-H', 'posix', '-x', '-C', scratchDir]]
     );
 
